@@ -17,6 +17,11 @@ exports.handler = async (event, context, callback) => {
         await addCount()
         result = {"body": await getCount()}
     }
+    else if(event.queryStringParameters.type == "addv2")
+    {
+        await addv2Count(event, {"amount": event.queryStringParameters.amount})
+        result = {"body": await getCount()}
+    }
     else
     {
         result = {"body" : "Nothing matching."}
@@ -43,6 +48,14 @@ const addCount = async (event, context) => {
     .promise()
     
     await dynamodb.put({TableName: "my-little-table", Item: {key: "NijiCount", count: data.Item.count + 1}}).promise()
+}
+
+const addv2Count = async (event, context) => {
+    const data = await dynamodb.get({ TableName: "my-little-table", Key: {"key": "NijiCount"}})
+    .promise()
+    var valueAdded = 1
+    if (context.amount != null) valueAdded = parseInt(context.amount)
+    await dynamodb.put({TableName: "my-little-table", Item: {key: "NijiCount", count: parseInt(data.Item.count) + valueAdded}}).promise()
 }
 /*
 async (event) => {
