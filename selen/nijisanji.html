@@ -19,8 +19,9 @@
 			}
 		</style>
 		<script type="text/javascript">
-			var audioArray = [new Audio('neejee.mp3'),new Audio('neejee.mp3'),new Audio('neejee.mp3'),new Audio('neejee.mp3'),new Audio('neejee.mp3'),new Audio('neejee.mp3')];
+			var audioArray = [new Audio('neejee.mp3'),new Audio('neejee1.mp3'),new Audio('neejee2.mp3'),new Audio('neejee3.mp3'),new Audio('neejee.mp3'),new Audio('neejee1.mp3'),new Audio('neejee2.mp3'),new Audio('neejee3.mp3')];
 			var isWaiting = false;
+			var queuedAdds = 0;
 			
 			async function checkFunction(){
 				const response = await fetch("https://rmkgbunrq3.execute-api.us-west-2.amazonaws.com/default/my-little-function?type=get", {
@@ -32,14 +33,14 @@
 			}
 
 			async function clickFunction(){
-				if(isWaiting) return;
-				isWaiting = true;
 				isPlayed = false;
 				for(var i in audioArray) {
 					if(audioArray[i].paused)
 					{
 						audioArray[i].play();
 						isPlayed = true;
+						var poppedAudio = audioArray.shift();
+						audioArray.push(poppedAudio);
 						break;
 					}
 				}
@@ -48,12 +49,21 @@
 					return;
 				}
 				document.querySelector('span').textContent = parseInt(document.querySelector('span').textContent) + 1;
-				const response = await fetch("https://rmkgbunrq3.execute-api.us-west-2.amazonaws.com/default/my-little-function?type=add", {
+
+				/* the waiting part. */
+				queuedAdds += 1;
+				if(isWaiting) {
+					return;
+				}
+				isWaiting = true;
+				var loadedAdds = queuedAdds;
+				const response = await fetch("https://rmkgbunrq3.execute-api.us-west-2.amazonaws.com/default/my-little-function?type=addv2&amount=" + loadedAdds.toString(), {
 					method: 'GET',
 					mode: 'cors'
 				});
 				var data = await response.json();
-				document.querySelector('span').textContent = data;
+				queuedAdds -= loadedAdds;
+				/* document.querySelector('span').textContent = data; */
 				isWaiting = false;
 			}
 			checkFunction();
